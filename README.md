@@ -160,7 +160,18 @@ The script tries to copy the current selection first. If nothing is selected, it
 
 ## Cost
 
-**Free!** OpenRouter's free tier includes Llama 3.3 70B which is more than capable for this task. You might hit rate limits with heavy use, but for normal usage it costs nothing.
+**Free!** OpenRouter's free tier includes Llama 3.3 70B which is more than capable for this task.
+
+### OpenRouter Free Tier Limits
+
+| Account Type | Daily Limit |
+|-------------|-------------|
+| Free (no credits purchased) | 50 requests/day |
+| $10+ credits purchased | 1,000 requests/day |
+
+**Pro tip:** If you use this a lot, add $10 to your OpenRouter account once. Even after you spend those credits on other models, you keep the 1,000/day limit for free models forever.
+
+Note: Failed requests still count toward your quota, and free models can be slower during peak times.
 
 ## Credits
 

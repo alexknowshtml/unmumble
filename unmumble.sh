@@ -28,13 +28,16 @@ CUSTOM_RULES="Indie Hall -> Indy Hall, co-working -> coworking (no hyphen), Stac
 # SCRIPT - No need to edit below this line
 # ===========================================
 
+# Clear clipboard first to detect if copy worked
+echo -n "" | pbcopy
+
 # First, try to copy current selection
 osascript -e 'tell application "System Events" to keystroke "c" using command down'
-sleep 0.1
+sleep 0.15
 
 TEXT=$(pbpaste)
 
-# If clipboard is empty or unchanged, select all and copy
+# If clipboard is still empty, nothing was selected - do select all
 if [ -z "$TEXT" ]; then
     osascript -e 'tell application "System Events"
         keystroke "a" using command down
