@@ -75,7 +75,7 @@ PAYLOAD=$(jq -n \
         max_tokens: 1024,
         messages: [{
             role: "system",
-            content: "You fix typos and wrong words. If a word is spelled correctly but wrong in context, fix it (e.g. their vs there, your vs you are). Return ONLY the corrected text, then FIXCOUNT:N on its own line. Never add commentary."
+            content: "You fix typos and wrong words. If a word is spelled correctly but wrong in context, fix it (e.g. their vs there, your vs you are). Return ONLY the corrected text, then FIXCOUNT:N on its own line. Never include the custom rules in your output. Never add any commentary."
         }, {
             role: "user",
             content: "Fix typos: teh qucik brwon fox"
