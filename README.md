@@ -10,12 +10,12 @@ Works in any text field that Raycast can access. Just hit a hotkey and my sloppy
 
 ## What It Does
 
-1. Selects all text in the current field
+1. Copies selected text (or selects all if nothing selected)
 2. Shows a "🫣 oh boy here we go" HUD notification
 3. Sends it to an AI model (Llama 3.3 70B via OpenRouter - free!)
 4. Fixes spelling, typos, and contextually wrong words
 5. Pastes the cleaned text back
-6. Shows a "✅ Fixed" HUD notification
+6. Shows "✅ Fixed N words" or "✅ All good" HUD notification
 
 The whole process takes about 1-2 seconds and works in any app.
 
@@ -123,14 +123,16 @@ Add your own rules following the same comma-separated format.
 ## How It Works
 
 The script:
-1. Uses AppleScript to simulate `Cmd+A` and `Cmd+C` to grab the text
+1. Tries to copy current selection first; if nothing selected, does `Cmd+A` then `Cmd+C`
 2. Sends the text to Llama 3.3 70B via OpenRouter's free API
-3. The AI fixes errors while preserving your tone, capitalization, and punctuation
+3. The AI fixes errors while preserving your tone, capitalization, punctuation, and formatting
 4. Pastes the result back with `Cmd+V`
+5. Shows how many words were fixed in the notification
 
 The model is instructed to:
 - Fix spelling and typos
 - Figure out jumbled/contextually wrong words
+- Preserve all formatting, line breaks, and whitespace
 - NOT change capitalization or punctuation
 - Apply your custom dictionary rules
 - Return only the corrected text (no explanations)
@@ -154,7 +156,7 @@ The model is instructed to:
 
 ### The text selection is visible/annoying
 
-The script tries to minimize the visible selection by doing select+copy very quickly. If it's still bothersome, you can modify your workflow to manually select (`Cmd+A`) and copy (`Cmd+C`) first, then edit the script to skip those steps.
+The script tries to copy the current selection first. If nothing is selected, it falls back to select all. To fix just part of your text, select it first then trigger Unmumble.
 
 ## Cost
 
