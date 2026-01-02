@@ -1,6 +1,6 @@
 # Unmumble
 
-**Free AI-powered typo fixer for macOS.** Works with any text field. Hit a hotkey, get clean text.
+**Free AI-powered typo fixer for Raycast/macOS.** Works with any text field. Hit a hotkey, get clean text.
 
 Uses OpenRouter's free tier (Llama 3.3 70B) by default, or swap in your own local model via Ollama.
 
