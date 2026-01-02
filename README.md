@@ -192,6 +192,10 @@ RESPONSE=$(curl -s http://localhost:11434/api/chat \
 
 And update the model name in the payload to match your local model (e.g., `llama3.2`, `mistral`, etc.). The response format is the same, so everything else should just work.
 
+## Want a Proper Raycast Extension?
+
+This script works great, but if you'd prefer a one-click install from the Raycast Store with a proper settings UI, [open an issue](https://github.com/alexknowshtml/unmumble/issues) and let me know. If there's enough interest, I'll build it.
+
 ## Credits
 
 Built by [Alex Hillman](https://alexhillman.com) with help from Claude.
