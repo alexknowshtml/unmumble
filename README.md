@@ -1,6 +1,12 @@
 # Unmumble
 
-A Raycast script command that fixes typos, spelling errors, and jumbled words in any text field using AI. Hit a hotkey, and your sloppy typing becomes clean text - perfect for those of us who've gotten lazy because AI chat understands us anyway.
+If you're like me, using Claude Code has had one really nasty side effect: it's made me a lot more tolerant to my own goofy typos and errors...because I know the agent just understands what I meant. 
+
+The people I work with and talk to every day...they deserve better. 
+
+So I created this simple Raycast script command that automatically finds and fixes typos, spelling errors, and jumbled words without changing any meaning or loss of fidelity. 
+
+Works in any text field that Raycast can access. Just hit a hotkey and my sloppy AI-brained typing becomes clean text. Does not change capitalization or punctuation.
 
 ## What It Does
 
