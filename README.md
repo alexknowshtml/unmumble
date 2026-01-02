@@ -129,11 +129,12 @@ Add your own rules following the same comma-separated format.
 ## How It Works
 
 The script:
-1. Tries to copy current selection first; if nothing selected, does `Cmd+A` then `Cmd+C`
-2. Sends the text to Llama 3.3 70B via OpenRouter's free API
-3. The AI fixes errors while preserving your tone, capitalization, punctuation, and formatting
-4. Pastes the result back with `Cmd+V`
-5. Shows how many words were fixed in the notification
+1. Checks for double-runs (shows "⏳ hold on..." if already running)
+2. Tries to copy current selection first; if nothing selected, does `Cmd+A` then `Cmd+C`
+3. Sends the text to Llama 3.3 70B via OpenRouter's free API
+4. The AI fixes errors while preserving your tone, capitalization, punctuation, and formatting
+5. Pastes the result back with `Cmd+V`
+6. Shows how many words were fixed in the notification
 
 The model is instructed to:
 - Fix spelling and typos
