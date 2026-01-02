@@ -22,7 +22,7 @@ OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
 
 # Custom dictionary (single line for JSON safety)
 # Format: "wrong -> right, wrong2 -> right2"
-CUSTOM_RULES="Indie Hall -> Indy Hall, co-working -> coworking (no hyphen), Stacking the bricks -> Stacking the Bricks"
+CUSTOM_RULES="co-working -> coworking"
 
 # ===========================================
 # SCRIPT - No need to edit below this line
@@ -66,7 +66,7 @@ fi
 # Notify AFTER we have text
 open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22%F0%9F%AB%A3%20oh%20boy%20here%20we%20go%22%7D" >/dev/null 2>&1
 
-# Build JSON payload properly using jq
+# Build JSON payload with few-shot prompting for better accuracy
 PAYLOAD=$(jq -n \
     --arg text "$TEXT" \
     --arg rules "$CUSTOM_RULES" \
@@ -74,8 +74,17 @@ PAYLOAD=$(jq -n \
         model: "meta-llama/llama-3.3-70b-instruct:free",
         max_tokens: 1024,
         messages: [{
+            role: "system",
+            content: "You fix typos. Return ONLY the corrected text, then FIXCOUNT:N on its own line. Never add commentary, explanations, or notes about rules."
+        }, {
             role: "user",
-            content: ("You are a text fixer. Fix spelling errors and typos in the text below. If a word is jumbled or wrong in context, replace it with the intended word. Do NOT change capitalization, punctuation, or formatting. PRESERVE ALL LINE BREAKS AND WHITESPACE EXACTLY. Apply these rules: " + $rules + ".\n\nOutput the corrected text, then on a NEW LINE at the very end, write FIXCOUNT:N where N is the number of words you changed. Example:\n\nHere is the corrected text.\nFIXCOUNT:2\n\nText to fix:\n\n" + $text)
+            content: "Fix typos: teh qucik brwon fox"
+        }, {
+            role: "assistant",
+            content: "the quick brown fox\nFIXCOUNT:3"
+        }, {
+            role: "user",
+            content: ("Fix typos: " + $text + "\n\nCustom rules: " + $rules)
         }]
     }')
 
@@ -93,7 +102,7 @@ if [ -n "$FIXED_TEXT" ]; then
     # Remove the FIXCOUNT line from the text
     CLEAN_TEXT=$(echo "$FIXED_TEXT" | sed '/^FIXCOUNT:[0-9]*$/d')
 
-    # Remove trailing newline and copy to clipboard
+    # Copy to clipboard and paste
     printf "%s" "$CLEAN_TEXT" | pbcopy
     sleep 0.05
     osascript -e 'tell application "System Events" to keystroke "v" using command down' 2>/dev/null
