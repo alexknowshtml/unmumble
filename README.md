@@ -1,10 +1,16 @@
 # Unmumble
 
-If you're like me, using Claude Code has had one really nasty side effect: it's made me a lot more tolerant to my own goofy typos and errors...because I know the agent just understands what I meant. 
+**Free AI-powered typo fixer for macOS.** Works with any text field. Hit a hotkey, get clean text.
 
-The people I work with and talk to every day...they deserve better. 
+Uses OpenRouter's free tier (Llama 3.3 70B) by default, or swap in your own local model via Ollama.
 
-So I created this simple Raycast script command that automatically finds and fixes typos, spelling errors, and jumbled words without changing any meaning or loss of fidelity. 
+---
+
+If you're like me, using Claude Code has had one really nasty side effect: it's made me a lot more tolerant to my own goofy typos and errors...because I know the agent just understands what I meant.
+
+The people I work with and talk to every day...they deserve better.
+
+So I created this simple Raycast script command that automatically finds and fixes typos, spelling errors, and jumbled words without changing any meaning or loss of fidelity.
 
 Works in any text field that Raycast can access. Just hit a hotkey and my sloppy AI-brained typing becomes clean text. Does not change capitalization or punctuation.
 
@@ -172,6 +178,18 @@ The script tries to copy the current selection first. If nothing is selected, it
 **Pro tip:** If you use this a lot, add $10 to your OpenRouter account once. Even after you spend those credits on other models, you keep the 1,000/day limit for free models forever.
 
 Note: Failed requests still count toward your quota, and free models can be slower during peak times.
+
+### Using a Local Model (Ollama)
+
+If you'd rather run completely locally with no API calls, you can use Ollama. Just change the curl call in the script:
+
+```bash
+# Replace the OpenRouter curl call with:
+RESPONSE=$(curl -s http://localhost:11434/api/chat \
+    -d "$PAYLOAD")
+```
+
+And update the model name in the payload to match your local model (e.g., `llama3.2`, `mistral`, etc.). The response format is the same, so everything else should just work.
 
 ## Credits
 
