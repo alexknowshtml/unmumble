@@ -29,6 +29,16 @@ CUSTOM_RULES='
 # SCRIPT - No need to edit below this line
 # ===========================================
 
+# Notification helper - tries Raycast HUD first, falls back to macOS notification
+notify() {
+    local message="$1"
+    # Try Raycast notification extension first
+    if ! open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22$(echo "$message" | jq -sRr @uri)%22%7D" 2>/dev/null; then
+        # Fall back to macOS notification
+        osascript -e "display notification \"$message\" with title \"Unmumble\""
+    fi
+}
+
 # Select all and copy in one quick AppleScript (minimizes visible selection)
 osascript -e 'tell application "System Events"
     keystroke "a" using command down
@@ -45,9 +55,8 @@ if [ -z "$TEXT" ]; then
     exit 0
 fi
 
-# Show "working" HUD (requires Raycast Notification extension)
-# Install from: https://www.raycast.com/maxnyby/raycast-notification
-open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Fixing%20text...%22%7D" 2>/dev/null
+# Show "working" notification
+notify "Fixing text..."
 
 # Escape text for JSON (remove outer quotes since we embed it in the prompt)
 ESCAPED_TEXT=$(echo "$TEXT" | jq -Rs '.' | sed 's/^"//;s/"$//')
@@ -74,11 +83,11 @@ if [ -n "$FIXED_TEXT" ]; then
     printf "%s" "$FIXED_TEXT" | pbcopy
     sleep 0.05
     osascript -e 'tell application "System Events" to keystroke "v" using command down'
-    # Success HUD
-    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22%E2%9C%A8%20Fixed!%22%7D" 2>/dev/null
+    # Success notification
+    notify "✨ Fixed!"
     exit 0
 else
-    # Error HUD
-    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%20fixing%20text%22%7D" 2>/dev/null
+    # Error notification
+    notify "Error fixing text"
     exit 1
 fi
