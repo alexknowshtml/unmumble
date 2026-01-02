@@ -2,9 +2,9 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Fix Text Before Send
+# @raycast.title Unmumble
 # @raycast.mode silent
-# @raycast.packageName Text Cleanup
+# @raycast.packageName Unmumble
 
 # Optional parameters:
 # @raycast.icon ✨

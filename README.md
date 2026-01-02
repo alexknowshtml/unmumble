@@ -1,4 +1,4 @@
-# Fix Text Before Send
+# Unmumble
 
 A Raycast script command that fixes typos, spelling errors, and jumbled words in any text field using AI. Hit a hotkey, and your sloppy typing becomes clean text - perfect for those of us who've gotten lazy because AI chat understands us anyway.
 
@@ -55,11 +55,11 @@ brew install jq
 mkdir -p ~/Documents/Raycast\ Scripts
 
 # Download the script
-curl -o ~/Documents/Raycast\ Scripts/fix-text-before-send.sh \
-  https://raw.githubusercontent.com/alexknowshtml/fix-text-before-send/main/fix-text-before-send.sh
+curl -o ~/Documents/Raycast\ Scripts/unmumble.sh \
+  https://raw.githubusercontent.com/alexknowshtml/unmumble/main/unmumble.sh
 
 # Make it executable
-chmod +x ~/Documents/Raycast\ Scripts/fix-text-before-send.sh
+chmod +x ~/Documents/Raycast\ Scripts/unmumble.sh
 ```
 
 ### 4. Add your API key
@@ -68,7 +68,7 @@ Edit the script and replace `YOUR_OPENROUTER_API_KEY_HERE` with your actual key:
 
 ```bash
 # Open in your editor
-open ~/Documents/Raycast\ Scripts/fix-text-before-send.sh
+open ~/Documents/Raycast\ Scripts/unmumble.sh
 ```
 
 Find this line and add your key:
@@ -86,7 +86,7 @@ OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
 
 ### 6. Set up a hotkey
 
-1. Open Raycast and search for "Fix Text Before Send"
+1. Open Raycast and search for "Unmumble"
 2. Press `Cmd+K` to open actions
 3. Click **Add Hotkey**
 4. Set your preferred hotkey (I use `Hyper+Enter` with Raycast's built-in Hyper Key feature)
@@ -137,7 +137,7 @@ The model is instructed to:
 
 1. Check that jq is installed: `which jq`
 2. Verify your API key is set correctly in the script
-3. Make sure the script is executable: `chmod +x ~/Documents/Raycast\ Scripts/fix-text-before-send.sh`
+3. Make sure the script is executable: `chmod +x ~/Documents/Raycast\ Scripts/unmumble.sh`
 
 ### I get an error notification
 
@@ -145,7 +145,7 @@ The model is instructed to:
 - Check you have credits (the free tier should work, but has rate limits)
 - Try running the script manually to see error output:
   ```bash
-  ~/Documents/Raycast\ Scripts/fix-text-before-send.sh
+  ~/Documents/Raycast\ Scripts/unmumble.sh
   ```
 
 ### The text selection is visible/annoying
