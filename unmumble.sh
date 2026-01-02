@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Add system paths (needed when running from Raycast)
+export PATH="/usr/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
+
 # Required parameters:
 # @raycast.schemaVersion 1
 # @raycast.title Unmumble
@@ -17,77 +20,60 @@
 # Get your free API key at https://openrouter.ai/
 OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
 
-# ===========================================
-# CUSTOM DICTIONARY - Add your corrections here
-# These rules are passed to the AI along with the text
-# ===========================================
-CUSTOM_RULES='
-- Example: "teh" should be "the"
-'
+# Custom dictionary (single line for JSON safety)
+# Format: "wrong -> right, wrong2 -> right2"
+CUSTOM_RULES="Indie Hall -> Indy Hall, co-working -> coworking (no hyphen), Stacking the bricks -> Stacking the Bricks"
 
 # ===========================================
 # SCRIPT - No need to edit below this line
 # ===========================================
 
-# Notification helper - tries Raycast HUD first, falls back to macOS notification
-notify() {
-    local message="$1"
-    # Try Raycast notification extension first
-    if ! open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22$(echo "$message" | jq -sRr @uri)%22%7D" 2>/dev/null; then
-        # Fall back to macOS notification
-        osascript -e "display notification \"$message\" with title \"Unmumble\""
-    fi
-}
-
-# Select all and copy in one quick AppleScript (minimizes visible selection)
+# Select all and copy FIRST, before notification
 osascript -e 'tell application "System Events"
     keystroke "a" using command down
-    delay 0.02
+    delay 0.1
     keystroke "c" using command down
 end tell'
-sleep 0.05
+sleep 0.2
 
-# Get clipboard content
 TEXT=$(pbpaste)
 
-# Skip if empty
 if [ -z "$TEXT" ]; then
     exit 0
 fi
 
-# Show "working" notification
-notify "Fixing text..."
+# Notify AFTER we have text
+open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22%F0%9F%AB%A3%20oh%20boy%20here%20we%20go%22%7D"
 
-# Escape text for JSON (remove outer quotes since we embed it in the prompt)
-ESCAPED_TEXT=$(echo "$TEXT" | jq -Rs '.' | sed 's/^"//;s/"$//')
+# Build JSON payload properly using jq
+PAYLOAD=$(jq -n \
+    --arg text "$TEXT" \
+    --arg rules "$CUSTOM_RULES" \
+    '{
+        model: "meta-llama/llama-3.3-70b-instruct:free",
+        max_tokens: 1024,
+        messages: [{
+            role: "user",
+            content: ("You are a text fixer. Fix spelling errors and typos in the text below. If a word is jumbled or wrong in context, replace it with the intended word. Do NOT change capitalization, punctuation, or add any commentary. Apply these rules: " + $rules + ". Output ONLY the corrected text, nothing else:\n\n" + $text)
+        }]
+    }')
 
-# Call OpenRouter API (using free Llama model)
 RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-    -d "{
-        \"model\": \"meta-llama/llama-3.3-70b-instruct:free\",
-        \"max_tokens\": 1024,
-        \"messages\": [{
-            \"role\": \"user\",
-            \"content\": \"Fix this text. Correct spelling and typos. If a word is jumbled or doesn't make sense in context, figure out what word was intended and use it. Do NOT change capitalization or punctuation. Keep the same tone, meaning, and voice.\\n\\nAlso apply these specific corrections:\\n$CUSTOM_RULES\\n\\nReturn ONLY the corrected text with no explanation or commentary:\\n\\n$ESCAPED_TEXT\"
-        }]
-    }")
+    -d "$PAYLOAD")
 
-# Extract the text from response (OpenAI-compatible format)
 FIXED_TEXT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
 
-# If we got a response, paste it back
 if [ -n "$FIXED_TEXT" ]; then
-    # Remove trailing newline and copy to clipboard
     printf "%s" "$FIXED_TEXT" | pbcopy
     sleep 0.05
     osascript -e 'tell application "System Events" to keystroke "v" using command down'
-    # Success notification
-    notify "✨ Fixed!"
+    # Notify: ✅ Fixed
+    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22%E2%9C%85%20Fixed%22%7D"
     exit 0
 else
-    # Error notification
-    notify "Error fixing text"
+    # Notify: Error
+    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%22%7D"
     exit 1
 fi

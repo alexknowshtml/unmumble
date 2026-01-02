@@ -5,10 +5,11 @@ A Raycast script command that fixes typos, spelling errors, and jumbled words in
 ## What It Does
 
 1. Selects all text in the current field
-2. Sends it to an AI model (Llama 3.3 70B via OpenRouter - free!)
-3. Fixes spelling, typos, and contextually wrong words
-4. Pastes the cleaned text back
-5. Shows a subtle HUD notification when done
+2. Shows a "🫣 oh boy here we go" HUD notification
+3. Sends it to an AI model (Llama 3.3 70B via OpenRouter - free!)
+4. Fixes spelling, typos, and contextually wrong words
+5. Pastes the cleaned text back
+6. Shows a "✅ Fixed" HUD notification
 
 The whole process takes about 1-2 seconds and works in any app.
 
@@ -28,7 +29,7 @@ i just wanted to check in about the meeting tomorrow at Indy Hall
 
 - macOS
 - [Raycast](https://raycast.com) (free)
-- [Raycast Notification extension](https://www.raycast.com/maxnyby/raycast-notification) (optional, for HUD notifications)
+- [Raycast Notification extension](https://www.raycast.com/maxnyby/raycast-notification) (for HUD notifications)
 - [jq](https://jqlang.github.io/jq/) - JSON processor
 - [OpenRouter API key](https://openrouter.ai/) (free tier works great)
 
@@ -91,30 +92,27 @@ OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
 3. Click **Add Hotkey**
 4. Set your preferred hotkey (I use `Hyper+Enter` with Raycast's built-in Hyper Key feature)
 
-### 7. (Optional) Install the notification extension
+### 7. Install the notification extension
 
-For nice HUD notifications at the bottom of your screen:
+For HUD notifications at the bottom of your screen:
 
 1. Open Raycast
 2. Search for "Store"
 3. Search for "Raycast Notification" by maxnyby
 4. Install it
 
-Without this extension, the script still works - you just won't see the "Fixing text..." and "Fixed!" notifications.
+Without this extension, the script still works but you won't see the status notifications.
 
 ## Custom Dictionary
 
-You can add custom word corrections that the AI will always apply. Edit the `CUSTOM_RULES` section in the script:
+You can add custom word corrections that the AI will always apply. Edit the `CUSTOM_RULES` line in the script:
 
 ```bash
-CUSTOM_RULES='
-- "Indie Hall" or "indie hall" should be "Indy Hall"
-- "co-working" or "co working" should be "coworking" (always one word, no hyphen)
-- "Stacking the bricks" should be "Stacking the Bricks"
-'
+# Format: "wrong -> right, wrong2 -> right2"
+CUSTOM_RULES="Indie Hall -> Indy Hall, co-working -> coworking (no hyphen), Stacking the bricks -> Stacking the Bricks"
 ```
 
-Add your own rules following the same format. The AI will apply these in addition to fixing general spelling/typos.
+Add your own rules following the same comma-separated format.
 
 ## How It Works
 
