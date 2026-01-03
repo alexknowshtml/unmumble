@@ -1,8 +1,8 @@
 # Unmumble
 
-**Free AI-powered typo fixer for Raycast/macOS.** Works with any text field. Hit a hotkey, get clean text.
+**AI-powered typo fixer for Raycast/macOS.** Works with any text field. Hit a hotkey, get clean text.
 
-Uses OpenRouter's free tier (Llama 3.3 70B) by default, or swap in your own local model via Ollama.
+Uses Claude 3 Haiku via OpenRouter for the best results (fractions of a penny per fix), or swap in a free model or your own local model via Ollama.
 
 ---
 
@@ -18,7 +18,7 @@ Works in any text field that Raycast can access. Just hit a hotkey and my sloppy
 
 1. Copies selected text (or selects all if nothing selected)
 2. Shows a "🫣 oh boy here we go" HUD notification
-3. Sends it to an AI model (Llama 3.3 70B via OpenRouter - free!)
+3. Sends it to Claude 3 Haiku via OpenRouter
 4. Fixes spelling, typos, and contextually wrong words
 5. Pastes the cleaned text back
 6. Shows "✅ Fixed N words" or "✅ All good" HUD notification
@@ -131,7 +131,7 @@ Add your own rules following the same comma-separated format.
 The script:
 1. Checks for double-runs (shows "⏳ hold on..." if already running)
 2. Tries to copy current selection first; if nothing selected, does `Cmd+A` then `Cmd+C`
-3. Sends the text to Llama 3.3 70B via OpenRouter's free API
+3. Sends the text to Claude 3 Haiku via OpenRouter
 4. The AI fixes errors while preserving your tone, capitalization, punctuation, and formatting
 5. Pastes the result back with `Cmd+V`
 6. Shows how many words were fixed in the notification
@@ -167,18 +167,29 @@ The script tries to copy the current selection first. If nothing is selected, it
 
 ## Cost
 
-**Free!** OpenRouter's free tier includes Llama 3.3 70B which is more than capable for this task.
+The script defaults to **Claude 3 Haiku** via OpenRouter for the best results. It's cheap:
 
-### OpenRouter Free Tier Limits
+| Usage | Monthly Cost |
+|-------|-------------|
+| 10 fixes/day | ~$0.04 |
+| 50 fixes/day | ~$0.21 |
+| 100 fixes/day | ~$0.42 |
 
-| Account Type | Daily Limit |
-|-------------|-------------|
-| Free (no credits purchased) | 50 requests/day |
-| $10+ credits purchased | 1,000 requests/day |
+That's fractions of a penny per fix ($0.25/million input tokens, $1.25/million output tokens).
 
-**Pro tip:** If you use this a lot, add $10 to your OpenRouter account once. Even after you spend those credits on other models, you keep the 1,000/day limit for free models forever.
+### Want Free Instead?
 
-Note: Failed requests still count toward your quota, and free models can be slower during peak times.
+You can switch to OpenRouter's free tier (Llama 3.3 70B) by changing the model in the script:
+
+```bash
+model: "meta-llama/llama-3.3-70b-instruct:free"
+```
+
+Free tier limits:
+- 50 requests/day (no credits)
+- 1,000 requests/day ($10+ credits purchased once, ever)
+
+The free models work but can be slower and less accurate. Haiku is worth the pennies.
 
 ### Using a Local Model (Ollama)
 
