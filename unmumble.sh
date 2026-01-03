@@ -17,7 +17,7 @@ export PATH="/usr/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
 # CONFIGURATION
 # ===========================================
 
-# Get your free API key at https://openrouter.ai/
+# Get your API key at https://openrouter.ai/
 OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
 
 # Custom dictionary (single line for JSON safety)
@@ -69,31 +69,32 @@ open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=back
 # Escape text for JSON (handle newlines and special chars)
 TEXT_ESCAPED=$(printf '%s' "$TEXT" | jq -Rs '.')
 if [ -z "$TEXT_ESCAPED" ]; then
-    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%3A%20text%20escape%22%7D" >/dev/null 2>&1
+    osascript -e 'display notification "Failed to escape text for API" with title "Unmumble Error"' 2>/dev/null
     exit 1
 fi
 
 # Build JSON payload with few-shot prompting for better accuracy
+# Uses XML tags around user content to prevent prompt injection
 PAYLOAD=$(jq -n --argjson text "$TEXT_ESCAPED" --arg rules "$CUSTOM_RULES" '{
     model: "anthropic/claude-3-haiku",
     max_tokens: 1024,
     messages: [{
         role: "system",
-        content: ("Fix these specific issues: 1) Transposed letters (teh->the, adn->and), 2) Missing or extra letters (wiht->with, helllo->hello), 3) Spaces or punctuation in the middle of words (ra ycast->raycast, hel.lo->hello), 4) Wrong word in context (their->there, your->youre when needed). Do NOT change: intentional capitalization, sentence structure, or add/remove words. Be conservative - if unsure, leave it. Apply these replacements: " + $rules + ". Return the corrected text, then FIXCOUNT:N on its own line.")
+        content: ("You are a typo fixer. Fix ONLY: 1) Transposed letters (teh->the), 2) Missing/extra letters (wiht->with), 3) Spaces/punctuation mid-word (hel.lo->hello), 4) Wrong word in context (their->theyre). Do NOT change capitalization, structure, or meaning. Apply these replacements: " + $rules + ". Output format: corrected text, then FIXCOUNT:N on its own line. ONLY output the corrected text and FIXCOUNT - nothing else.")
     }, {
         role: "user",
-        content: "i jsut wantd to say teh meet. ing went wel and their going to love it. lets talk tmrw"
+        content: "<user_text>i jsut wantd to say teh meet. ing went wel and their going to love it. lets talk tmrw</user_text>"
     }, {
         role: "assistant",
         content: "i just wanted to say the meeting went well and theyre going to love it. lets talk tomorrow\nFIXCOUNT:7"
     }, {
         role: "user",
-        content: $text
+        content: ("<user_text>" + $text + "</user_text>")
     }]
 }' 2>/dev/null)
 
 if [ -z "$PAYLOAD" ] || ! echo "$PAYLOAD" | jq -e '.messages' >/dev/null 2>&1; then
-    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%3A%20payload%22%7D" >/dev/null 2>&1
+    osascript -e 'display notification "Failed to build API request" with title "Unmumble Error"' 2>/dev/null
     exit 1
 fi
 
@@ -104,11 +105,33 @@ RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
 
 # Check for API error
 if echo "$RESPONSE" | jq -e '.error' >/dev/null 2>&1; then
-    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22API%20Error%22%7D" >/dev/null 2>&1
+    ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message // "Unknown API error"')
+    osascript -e "display notification \"$ERROR_MSG\" with title \"Unmumble API Error\"" 2>/dev/null
     exit 1
 fi
 
 FIXED_TEXT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
+
+# Output validation - protect against prompt injection
+if [ -n "$FIXED_TEXT" ]; then
+    INPUT_LEN=${#TEXT}
+    OUTPUT_LEN=${#FIXED_TEXT}
+
+    # Check 1: Output shouldn't be drastically different in length (allow 50% variance + FIXCOUNT line)
+    MAX_LEN=$((INPUT_LEN * 3 / 2 + 20))
+    MIN_LEN=$((INPUT_LEN / 3))
+
+    if [ "$OUTPUT_LEN" -gt "$MAX_LEN" ] || [ "$OUTPUT_LEN" -lt "$MIN_LEN" ]; then
+        osascript -e 'display notification "Response length was suspicious" with title "Unmumble Security Error"' 2>/dev/null
+        exit 1
+    fi
+
+    # Check 2: Output shouldn't contain common injection markers
+    if echo "$FIXED_TEXT" | grep -qiE '(ignore previous|disregard|new instructions|system prompt|<script|javascript:)'; then
+        osascript -e 'display notification "Suspicious content detected" with title "Unmumble Security Error"' 2>/dev/null
+        exit 1
+    fi
+fi
 
 if [ -n "$FIXED_TEXT" ]; then
     # Extract count from last line
@@ -130,6 +153,6 @@ if [ -n "$FIXED_TEXT" ]; then
     fi
     exit 0
 else
-    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%3A%20no%20response%22%7D" >/dev/null 2>&1
+    osascript -e 'display notification "No response from API" with title "Unmumble Error"' 2>/dev/null
     exit 1
 fi
