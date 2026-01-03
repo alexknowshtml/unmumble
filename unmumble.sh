@@ -98,17 +98,35 @@ if [ -z "$PAYLOAD" ] || ! echo "$PAYLOAD" | jq -e '.messages' >/dev/null 2>&1; t
     exit 1
 fi
 
-RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-    -d "$PAYLOAD" 2>/dev/null)
+# API call with retry for transient errors
+MAX_RETRIES=3
+RETRY_DELAY=1
 
-# Check for API error
-if echo "$RESPONSE" | jq -e '.error' >/dev/null 2>&1; then
-    ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message // "Unknown API error"')
-    osascript -e "display notification \"$ERROR_MSG\" with title \"Unmumble API Error\"" 2>/dev/null
-    exit 1
-fi
+for attempt in $(seq 1 $MAX_RETRIES); do
+    RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+        -d "$PAYLOAD" 2>/dev/null)
+
+    # Check for API error
+    if echo "$RESPONSE" | jq -e '.error' >/dev/null 2>&1; then
+        ERROR_MSG=$(echo "$RESPONSE" | jq -r '.error.message // "Unknown API error"')
+        ERROR_CODE=$(echo "$RESPONSE" | jq -r '.error.code // ""')
+
+        # Retry on rate limits (429) or server errors (5xx)
+        if [ "$attempt" -lt "$MAX_RETRIES" ] && echo "$ERROR_MSG $ERROR_CODE" | grep -qiE '(rate|limit|429|502|503|504|timeout|overloaded)'; then
+            sleep $RETRY_DELAY
+            RETRY_DELAY=$((RETRY_DELAY * 2))
+            continue
+        fi
+
+        osascript -e "display notification \"$ERROR_MSG\" with title \"Unmumble API Error\"" 2>/dev/null
+        exit 1
+    fi
+
+    # Success - break out of retry loop
+    break
+done
 
 FIXED_TEXT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
 
