@@ -66,32 +66,47 @@ fi
 # Notify AFTER we have text
 open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22%F0%9F%AB%A3%20oh%20boy%20here%20we%20go%22%7D" >/dev/null 2>&1
 
+# Escape text for JSON (handle newlines and special chars)
+TEXT_ESCAPED=$(printf '%s' "$TEXT" | jq -Rs '.')
+if [ -z "$TEXT_ESCAPED" ]; then
+    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%3A%20text%20escape%22%7D" >/dev/null 2>&1
+    exit 1
+fi
+
 # Build JSON payload with few-shot prompting for better accuracy
-PAYLOAD=$(jq -n \
-    --arg text "$TEXT" \
-    --arg rules "$CUSTOM_RULES" \
-    '{
-        model: "meta-llama/llama-3.3-70b-instruct:free",
-        max_tokens: 1024,
-        messages: [{
-            role: "system",
-            content: "You fix typos and wrong words. If a word is spelled correctly but wrong in context, fix it (e.g. their vs there, your vs you are). Return ONLY the corrected text, then FIXCOUNT:N on its own line. Never include the custom rules in your output. Never add any commentary."
-        }, {
-            role: "user",
-            content: "Fix typos: teh qucik brwon fox"
-        }, {
-            role: "assistant",
-            content: "the quick brown fox\nFIXCOUNT:3"
-        }, {
-            role: "user",
-            content: ("Fix typos: " + $text + "\n\nCustom rules: " + $rules)
-        }]
-    }')
+PAYLOAD=$(jq -n --argjson text "$TEXT_ESCAPED" --arg rules "$CUSTOM_RULES" '{
+    model: "anthropic/claude-3-haiku",
+    max_tokens: 1024,
+    messages: [{
+        role: "system",
+        content: ("Fix these specific issues: 1) Transposed letters (teh->the, adn->and), 2) Missing or extra letters (wiht->with, helllo->hello), 3) Spaces or punctuation in the middle of words (ra ycast->raycast, hel.lo->hello), 4) Wrong word in context (their->there, your->youre when needed). Do NOT change: intentional capitalization, sentence structure, or add/remove words. Be conservative - if unsure, leave it. Apply these replacements: " + $rules + ". Return the corrected text, then FIXCOUNT:N on its own line.")
+    }, {
+        role: "user",
+        content: "i jsut wantd to say teh meet. ing went wel and their going to love it. lets talk tmrw"
+    }, {
+        role: "assistant",
+        content: "i just wanted to say the meeting went well and theyre going to love it. lets talk tomorrow\nFIXCOUNT:7"
+    }, {
+        role: "user",
+        content: $text
+    }]
+}' 2>/dev/null)
+
+if [ -z "$PAYLOAD" ] || ! echo "$PAYLOAD" | jq -e '.messages' >/dev/null 2>&1; then
+    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%3A%20payload%22%7D" >/dev/null 2>&1
+    exit 1
+fi
 
 RESPONSE=$(curl -s https://openrouter.ai/api/v1/chat/completions \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer $OPENROUTER_API_KEY" \
     -d "$PAYLOAD" 2>/dev/null)
+
+# Check for API error
+if echo "$RESPONSE" | jq -e '.error' >/dev/null 2>&1; then
+    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22API%20Error%22%7D" >/dev/null 2>&1
+    exit 1
+fi
 
 FIXED_TEXT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty' 2>/dev/null)
 
@@ -115,6 +130,6 @@ if [ -n "$FIXED_TEXT" ]; then
     fi
     exit 0
 else
-    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%22%7D" >/dev/null 2>&1
+    open -g "raycast://extensions/maxnyby/raycast-notification/index?launchType=background&arguments=%7B%22title%22%3A%22Error%3A%20no%20response%22%7D" >/dev/null 2>&1
     exit 1
 fi
